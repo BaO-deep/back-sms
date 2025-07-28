@@ -4,7 +4,6 @@ from .models import Role
 
 User = get_user_model()
 
-# Liste statique des permissions autorisées (directement ici si tu veux)
 STATIC_PERMISSIONS = Role.STATIC_PERMISSIONS
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -21,11 +20,10 @@ class RoleSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     roles = RoleSerializer(many=True, read_only=True)
-    permissions = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'roles', 'permissions']
+        fields = ['id', 'username', 'email', 'roles', 'status']
         read_only_fields = ['id']
 
     def get_permissions(self, obj):
@@ -41,7 +39,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'roles']
+        fields = ['id', 'username', 'email', 'password', 'roles', 'status']
         read_only_fields = ['id']
 
     def create(self, validated_data):
@@ -52,9 +50,11 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
+    roles = serializers.PrimaryKeyRelatedField(queryset=Role.objects.all(), many=True, required=False)
+
     class Meta:
         model = User
-        fields = ['username', 'email']
+        fields = ['username', 'email', 'roles', 'status']
 
 
 class UserLoginSerializer(serializers.Serializer):

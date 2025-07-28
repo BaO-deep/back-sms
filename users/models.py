@@ -1,16 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.contrib.postgres.fields import ArrayField  # PostgreSQL uniquement
+
 
 class Role(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    permissions = ArrayField(
-        models.CharField(max_length=100),
-        blank=True,
-        default=list
-    )
+    permissions = models.JSONField(default=list, blank=True)  # ✅ compatible SQLite & PostgreSQL
 
-    # Liste complète des permissions autorisées dans l’app
     STATIC_PERMISSIONS = [
         "access-live-dashboard",
         "create-articles",
@@ -52,9 +47,17 @@ class Role(models.Model):
     def __str__(self):
         return self.name
 
+
 class User(AbstractUser):
     email = models.EmailField(unique=True)
     roles = models.ManyToManyField(Role, related_name="users")
+
+    STATUS_CHOICES = [
+        ('active', 'Actif'),
+        ('inactive', 'Inactif'),
+
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
 
     def __str__(self):
         return self.username
@@ -62,7 +65,7 @@ class User(AbstractUser):
     def get_all_permissions(self):
         all_perms = set()
         for role in self.roles.all():
-            all_perms.update(role.permissions)
+            all_perms.update(role.permissions or [])
         return list(all_perms)
 
     class Meta:
