@@ -8,9 +8,22 @@ class ThemeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class PublicationSerializer(serializers.ModelSerializer):
+    theme = ThemeSerializer(read_only=True)  # détails complets du thème
+    theme_id = serializers.PrimaryKeyRelatedField(
+        queryset=Theme.objects.all(), source='theme', write_only=True
+    )
+
     class Meta:
         model = Publication
-        fields = '__all__'
+        fields = [
+            'id',
+            'contenu',
+            'date_publication',
+            'actif',
+            'theme',     # lecture
+            'theme_id',  # écriture
+            'date_creation'
+        ]
 
 class SouscriptionSerializer(serializers.ModelSerializer):
     class Meta:
